@@ -58,6 +58,33 @@ HR Team
 def home():
     return "Backend is running", 200
 
+@app.route("/sendNoSlotEmail", methods=["POST"])
+def send_no_slot_email():
+    data = request.json
+    candidate_name = data.get("candidate_name")
+    candidate_email = data.get("candidate_email")
+
+    subject = "Next Steps: Please Update Your Availability"
+
+    body = f"""
+Hi {candidate_name},
+
+We could not find a matching interview slot based on the availability provided.
+
+Please use the link below to choose new availability:
+https://your-frontend-link.com/reschedule
+
+Once you submit new timings, we will attempt to match with the HR/team again.
+
+Thanks,
+HR Team
+"""
+
+    # TODO: Implement your email sending logic here
+
+    return jsonify({"status": "sent"}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
+
