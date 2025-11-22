@@ -39,6 +39,7 @@ def send_sendgrid_email(to_email, subject, body):
     response = requests.post(url, json=data, headers=headers)
     return response.status_code, response.text
 
+
 # ---------------------------------------
 # RESCHEDULE PAGE
 # ---------------------------------------
@@ -53,6 +54,7 @@ def save_reschedule():
     new_slots = request.form.get("new_slots")
     print("Candidate submitted new slots:", new_slots)
     return "Thanks! Your new availability has been submitted."
+
 
 # ---------------------------------------
 # SEND BOOKING EMAIL
@@ -91,6 +93,7 @@ HR Team
     else:
         return jsonify({"status": "error", "details": resp}), 500
 
+
 # ---------------------------------------
 # SEND “NO SLOT FOUND” EMAIL
 # ---------------------------------------
@@ -123,12 +126,56 @@ HR Team
     else:
         return jsonify({"status": "error", "details": resp}), 500
 
+
 # ---------------------------------------
-# STEP C SUPPORT: UPDATED AVAILABILITY
+# HR ESCALATION EMAIL (Step D)
+# ---------------------------------------
+
+@app.route("/sendHREscalation", methods=["POST"])
+def send_hr_escalation():
+    data = request.json
+    candidate_email = data.get("candidate_email")
+    new_slots = data.get("new_slots")
+
+    subject = "Escalation: No Interview Slot Found"
+    body = f"""
+Hello HR Team,
+
+This is an automated escalation.
+
+Candidate: {candidate_email}
+Updated Availability: {new_slots}
+
+We attempted LLM-driven matching and no suitable interviewer slot was found.
+
+ACTION REQUIRED:
+• Review interviewer availability
+• Add new time slots
+• Adjust staffing if needed
+
+Regards,
+Auto Scheduler System
+"""
+
+    # HR mailbox here
+    HR_EMAIL = "aseriousglass@gmail.com"
+
+    code, resp = send_sendgrid_email(HR_EMAIL, subject, body)
+
+    if code == 202:
+        return jsonify({"status": "hr_notified"}), 200
+    else:
+        return jsonify({"status": "error", "details": resp}), 500
+
+
+# ---------------------------------------
+# UPDATED AVAILABILITY (Step C)
 # ---------------------------------------
 
 updated_availability = {}
-# { "candidate_email": "2025-12-01T09:00Z/2025-12-01T10:00Z" }
+# Example:
+# { "candidate@example.com": "2025-12-01T09:00Z/2025-12-01T10:00Z" }
+
 
 @app.route("/api/save_updated_availability", methods=["POST"])
 def save_updated_availability():

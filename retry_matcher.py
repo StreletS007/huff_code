@@ -8,15 +8,12 @@ from ibm_watsonx_ai.foundation_models import Model
 BASE = "https://backend-email-7jn1.onrender.com"
 
 def fetch_updated_availability():
-    r = requests.get(f"{BASE}/api/get_updated_availability")
-    return r.json()
+    return requests.get(f"{BASE}/api/get_updated_availability").json()
 
 def get_interviewers():
-    r = requests.get(f"{BASE}/api/get_interviewers")
-    return r.json()
+    return requests.get(f"{BASE}/api/get_interviewers").json()
 
 def llm_match(candidate_slots, interviewer_slots):
-
     prompt = f"""
 You are a scheduling AI.
 
@@ -86,6 +83,17 @@ def send_email(candidate_email, match):
     }
     return requests.post(f"{BASE}/sendEmail", json=payload).json()
 
+def escalate_to_hr(candidate_email, slots):
+    payload = {
+        "candidate_email": candidate_email,
+        "new_slots": slots
+    }
+    try:
+        r = requests.post(f"{BASE}/sendHREscalation", json=payload)
+        print("HR escalation sent:", r.json())
+    except Exception as e:
+        print("Escalation error:", e)
+
 def clear(candidate_email):
     requests.post(f"{BASE}/api/clear_availability/{candidate_email}")
 
@@ -109,6 +117,7 @@ def main():
             clear(email)
         else:
             print("No overlap for:", email)
+            escalate_to_hr(email, slots)
 
 if __name__ == "__main__":
     main()
