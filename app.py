@@ -1,11 +1,47 @@
 from flask import Flask, request, jsonify, render_template
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import os
+import requests
 
 app = Flask(__name__)
 
-# ---------------------- RESCHEDULE PAGE ----------------------
+# ---------------------------------------
+# SendGrid Email Helper
+# ---------------------------------------
+
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+FROM_EMAIL = os.getenv("FROM_EMAIL")  # example: "hr@yourdomain.com"
+
+def send_sendgrid_email(to_email, subject, body):
+    """
+    Sends an email using SendGrid API.
+    """
+    url = "https://api.sendgrid.com/v3/mail/send"
+
+    data = {
+        "personalizations": [{
+            "to": [{"email": to_email}]
+        }],
+        "from": {"email": FROM_EMAIL},
+        "subject": subject,
+        "content": [
+            {
+                "type": "text/plain",
+                "value": body
+            }
+        ]
+    }
+
+    headers = {
+        "Authorization": f"Bearer {SENDGRID_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+    return response.status_code, response.text
+
+# ---------------------------------------
+# RESCHEDULE PAGE
+# ---------------------------------------
 
 @app.route("/reschedule", methods=["GET"])
 def show_reschedule_page():
@@ -17,9 +53,12 @@ def save_reschedule():
     new_slots = request.form.get("new_slots")
     print("Candidate submitted new slots:", new_slots)
 
+    # Later: Save to DB or forward to WatsonX
     return "Thanks! Your new availability has been submitted."
 
-# ---------------------- SEND EMAIL ----------------------
+# ---------------------------------------
+# SEND EMAIL — Normal Booking Email
+# ---------------------------------------
 
 @app.route("/sendEmail", methods=["POST"])
 def send_email():
@@ -40,34 +79,23 @@ Your interview has been scheduled.
 📅 Date: {date}
 ⏰ Time: {start} - {end}
 
-If you need to reschedule, reply to this email.
+If you need to reschedule, use the link below:
+https://backend-email-7jn1.onrender.com/reschedule
 
 Best regards,
 HR Team
 """
 
-    sender_email = os.getenv("EMAIL_USER")
-    sender_password = os.getenv("EMAIL_PASS")
+    code, resp = send_sendgrid_email(candidate_email, subject, body)
 
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = candidate_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
-
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, candidate_email, msg.as_string())
-        server.quit()
-
+    if code == 202:
         return jsonify({"status": "email_sent"}), 200
+    else:
+        return jsonify({"status": "error", "details": resp}), 500
 
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# ---------------------- NO SLOT EMAIL ----------------------
+# ---------------------------------------
+# SEND EMAIL — No Slot Found Email
+# ---------------------------------------
 
 @app.route("/sendNoSlotEmail", methods=["POST"])
 def send_no_slot_email():
@@ -75,32 +103,40 @@ def send_no_slot_email():
     candidate_name = data.get("candidate_name")
     candidate_email = data.get("candidate_email")
 
-    subject = "Next Steps: Please Update Your Availability"
-
+    subject = "Update Your Availability"
     body = f"""
 Hi {candidate_name},
 
-We could not find a matching interview slot based on the availability provided.
+We could not find a matching interview slot based on your availability.
 
-Please use the link below to choose new availability:
+Please update your availability using the link below:
 https://backend-email-7jn1.onrender.com/reschedule
 
-Once you submit new timings, we will attempt to match with the HR/team again.
+Once you submit new timings, we will attempt matching again.
 
 Thanks,
 HR Team
 """
 
-    # TODO: Add real email sending logic here
+    code, resp = send_sendgrid_email(candidate_email, subject, body)
 
-    return jsonify({"status": "sent"}), 200
+    if code == 202:
+        return jsonify({"status": "email_sent"}), 200
+    else:
+        return jsonify({"status": "error", "details": resp}), 500
 
-# ---------------------- HOME ----------------------
+# ---------------------------------------
+# HOME PAGE
+# ---------------------------------------
 
 @app.route("/", methods=["GET"])
 def home():
     return "Backend is running", 200
 
+
+# ---------------------------------------
+# RUN LOCALLY
+# ---------------------------------------
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
