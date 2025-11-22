@@ -46,8 +46,8 @@ Best regards,
 HR Team
 """
 
-    sender_email = "m48071602@gmail.com"
-    sender_password = "mannu_mannu"
+    sender_email = os.getenv("EMAIL_USER")
+    sender_password = os.getenv("EMAIL_PASS")
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
