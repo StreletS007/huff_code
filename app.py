@@ -1,0 +1,63 @@
+from flask import Flask, request, jsonify
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+app = Flask(__name__)
+
+@app.route("/sendEmail", methods=["POST"])
+def send_email():
+    data = request.json
+
+    candidate_name = data.get("candidate_name")
+    candidate_email = data.get("candidate_email")
+    date = data.get("date")
+    start = data.get("start")
+    end = data.get("end")
+
+    # EMAIL CONTENT
+    subject = "Your Interview Slot is Scheduled"
+    body = f"""
+Hi {candidate_name},
+
+Your interview has been scheduled.
+
+📅 Date: {date}
+⏰ Time: {start} - {end}
+
+If you need to reschedule, reply to this email.
+
+Best regards,
+HR Team
+"""
+
+    # EMAIL SENDER SETTINGS
+    sender_email = "YOUR_EMAIL@gmail.com"
+    sender_password = "YOUR_APP_PASSWORD"
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = candidate_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    # Sending email
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, candidate_email, msg.as_string())
+        server.quit()
+
+        return jsonify({"status": "email_sent"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Backend is running", 200
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
