@@ -15,7 +15,7 @@ def send_email():
     start = data.get("start")
     end = data.get("end")
 
-    # EMAIL CONTENT
+
     subject = "Your Interview Slot is Scheduled"
     body = f"""
 Hi {candidate_name},
@@ -31,7 +31,7 @@ Best regards,
 HR Team
 """
 
-    # EMAIL SENDER SETTINGS
+
     sender_email = "YOUR_EMAIL@gmail.com"
     sender_password = "YOUR_APP_PASSWORD"
 
@@ -41,7 +41,7 @@ HR Team
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
 
-    # Sending email
+
     try:
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
