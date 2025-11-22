@@ -46,8 +46,8 @@ Best regards,
 HR Team
 """
 
-    sender_email = "YOUR_EMAIL@gmail.com"
-    sender_password = "YOUR_APP_PASSWORD"
+    sender_email = "m48071602@gmail.com"
+    sender_password = "mannu_mannu"
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
