@@ -133,6 +133,59 @@ HR Team
 def home():
     return "Backend is running", 200
 
+# ---------------------------------------
+# STEP C SUPPORT: Updated Availability Store
+# ---------------------------------------
+
+# Temporary storage for updated availability
+updated_availability = {}
+# Format:
+# { "candidate_email": "2025-12-01T09:00Z/2025-12-01T10:00Z", ... }
+
+
+@app.route("/api/save_updated_availability", methods=["POST"])
+def save_updated_availability():
+    """
+    Save the candidate's newly submitted slots (from WatsonX or frontend form)
+    Body expects:
+    {
+        "candidate_email": "user@example.com",
+        "new_slots": "2025-12-01T09:00Z/2025-12-01T10:00Z"
+    }
+    """
+    data = request.json
+    candidate_email = data.get("candidate_email")
+    new_slots = data.get("new_slots")
+
+    if not candidate_email or not new_slots:
+        return jsonify({"error": "Missing fields"}), 400
+
+    updated_availability[candidate_email] = new_slots
+    print("Saved updated availability:", updated_availability)
+
+    return jsonify({"status": "saved"}), 200
+
+
+@app.route("/api/get_updated_availability", methods=["GET"])
+def get_updated_availability():
+    """
+    Called by WatsonX Step C (Scheduled Workflow)
+    Returns the entire dict of updated availability
+    """
+    return jsonify(updated_availability), 200
+
+
+@app.route("/api/clear_availability/<email>", methods=["POST"])
+def clear_availability(email):
+    """
+    Clear once a successful match is found
+    """
+    if email in updated_availability:
+        del updated_availability[email]
+        return jsonify({"status": "cleared"}), 200
+
+    return jsonify({"status": "not_found"}), 404
+
 
 # ---------------------------------------
 # RUN LOCALLY
