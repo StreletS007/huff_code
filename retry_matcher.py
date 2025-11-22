@@ -1,38 +1,71 @@
 import os
 import json
 import requests
-from ibm_watsonx_ai import Credentials, WatsonxAI
+
+from ibm_watsonx_ai import Credentials
+from ibm_watsonx_ai.foundation_models import Model
 
 BASE = "https://backend-email-7jn1.onrender.com"
 
-# -----------------------------
-# WatsonX Config
-# -----------------------------
-WATSONX_API_KEY = os.getenv("WATSONX_API_KEY")
-WATSONX_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID")
-WATSONX_REGION = os.getenv("WATSONX_REGION")
-
-creds = Credentials(
-    api_key=WATSONX_API_KEY,
-    service_url=f"https://api.{WATSONX_REGION}.ml.cloud.ibm.com"
-)
-
-llm = WatsonxAI(
-    credentials=creds,
-    project_id=WATSONX_PROJECT_ID,
-    model_id="meta-llama/llama-3-8b-instruct",
-    params={"decoding_method": "greedy"}
-)
-
-# -----------------------------
-# API Helpers
-# -----------------------------
-
 def fetch_updated_availability():
-    return requests.get(f"{BASE}/api/get_updated_availability").json()
+    r = requests.get(f"{BASE}/api/get_updated_availability")
+    return r.json()
 
 def get_interviewers():
-    return requests.get(f"{BASE}/api/get_interviewers").json()
+    r = requests.get(f"{BASE}/api/get_interviewers")
+    return r.json()
+
+def llm_match(candidate_slots, interviewer_slots):
+
+    prompt = f"""
+You are a scheduling AI.
+
+Candidate new availability:
+{candidate_slots}
+
+Interviewer availability:
+{interviewer_slots}
+
+Find the earliest overlapping 30-minute slot.
+If match exists, respond ONLY in JSON:
+{{
+  "match_found": "yes",
+  "slot_start": "...",
+  "slot_end": "...",
+  "interviewer_id": "..."
+}}
+
+If no match, respond:
+{{
+  "match_found": "no"
+}}
+"""
+
+    creds = Credentials(
+        api_key=os.environ["WATSONX_API_KEY"],
+        url=os.environ["WATSONX_URL"]
+    )
+
+    model = Model(
+        model_id="meta-llama/llama-3-8b-instruct",
+        credentials=creds,
+        project_id=os.environ["PROJECT_ID"]
+    )
+
+    response = model.generate(
+        input_text=prompt,
+        parameters={
+            "decoding_method": "greedy",
+            "max_new_tokens": 200
+        }
+    )
+
+    text = response["results"][0]["generated_text"]
+
+    try:
+        return json.loads(text)
+    except:
+        return {"match_found": "no"}
 
 def create_booking(match, candidate_email):
     payload = {
@@ -56,78 +89,26 @@ def send_email(candidate_email, match):
 def clear(candidate_email):
     requests.post(f"{BASE}/api/clear_availability/{candidate_email}")
 
-# -----------------------------
-# LLM Matching Function
-# -----------------------------
-
-def llm_match(candidate_slots, interviewer_data):
-    prompt = f"""
-You are an AI scheduling assistant.
-
-Candidate availability:
-{candidate_slots}
-
-Interviewer availability:
-{interviewer_data}
-
-Find the earliest overlapping 30-minute window.
-
-Return ONLY valid JSON in exactly this format:
-
-If match found:
-{{
- "match_found": "yes",
- "slot_start": "YYYY-MM-DDTHH:MMZ",
- "slot_end":   "YYYY-MM-DDTHH:MMZ",
- "interviewer_id": "string"
-}}
-
-If no overlap:
-{{
- "match_found": "no"
-}}
-"""
-
-    raw = llm.generate_text(prompt=prompt)
-    print("LLM Raw Output:", raw)
-
-    try:
-        return json.loads(raw)
-    except:
-        return {"match_found": "no"}
-
-# -----------------------------
-# MAIN RETRY MATCHER LOGIC
-# -----------------------------
-
 def main():
     updated = fetch_updated_availability()
     if not updated:
         print("No updates yet.")
         return
-
+    
     interviewers = get_interviewers()
-
-    # Prepare interviewer structured data
-    interviewer_data = []
-    for iv in interviewers:
-        interviewer_data.append({
-            "interviewer_id": iv["id"],
-            "slots": iv["free_slots"]
-        })
 
     for email, slots in updated.items():
         print("Checking:", email)
-        match = llm_match(slots, interviewer_data)
+
+        match = llm_match(slots, interviewers)
 
         if match.get("match_found") == "yes":
-            print("LLM found match for:", email)
+            print("Match found for:", email)
             create_booking(match, email)
             send_email(email, match)
             clear(email)
         else:
-            print("LLM: No overlap for:", email)
-
+            print("No overlap for:", email)
 
 if __name__ == "__main__":
     main()
