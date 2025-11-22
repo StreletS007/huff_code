@@ -3,6 +3,21 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from flask import render_template
+
+@app.route("/reschedule", methods=["GET"])
+def show_reschedule_page():
+    return render_template("reschedule.html")
+
+@app.route("/reschedule", methods=["POST"])
+def save_reschedule():
+    new_slots = request.form.get("new_slots")
+
+    # TODO: save to DB or send to watson orchestrate
+    print("Candidate submitted new slots:", new_slots)
+
+    return "Thanks! Your new availability has been submitted."
+
 app = Flask(__name__)
 
 @app.route("/sendEmail", methods=["POST"])
