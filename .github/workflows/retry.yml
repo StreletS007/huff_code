@@ -2,12 +2,17 @@ name: Retry Matcher
 
 on:
   schedule:
-    - cron: "*/2 * * * *"   # runs every 2 minutes
-  workflow_dispatch:        # allow manual trigger
+    - cron: "*/2 * * * *"
+  workflow_dispatch:
 
 jobs:
   retry-matching:
     runs-on: ubuntu-latest
+
+    env:
+      WATSONX_API_KEY: ${{ secrets.WATSONX_API_KEY }}
+      WATSONX_PROJECT_ID: ${{ secrets.WATSONX_PROJECT_ID }}
+      WATSONX_REGION: ${{ secrets.WATSONX_REGION }}
 
     steps:
       - name: Checkout repo
