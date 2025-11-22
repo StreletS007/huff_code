@@ -52,12 +52,10 @@ def show_reschedule_page():
 def save_reschedule():
     new_slots = request.form.get("new_slots")
     print("Candidate submitted new slots:", new_slots)
-
-    # Later: Save to DB or forward to WatsonX
     return "Thanks! Your new availability has been submitted."
 
 # ---------------------------------------
-# SEND EMAIL — Normal Booking Email
+# SEND BOOKING EMAIL
 # ---------------------------------------
 
 @app.route("/sendEmail", methods=["POST"])
@@ -94,7 +92,7 @@ HR Team
         return jsonify({"status": "error", "details": resp}), 500
 
 # ---------------------------------------
-# SEND EMAIL — No Slot Found Email
+# SEND “NO SLOT FOUND” EMAIL
 # ---------------------------------------
 
 @app.route("/sendNoSlotEmail", methods=["POST"])
@@ -112,7 +110,7 @@ We could not find a matching interview slot based on your availability.
 Please update your availability using the link below:
 https://backend-email-7jn1.onrender.com/reschedule
 
-Once you submit new timings, we will attempt matching again.
+Once you submit new timings, matching will be attempted again.
 
 Thanks,
 HR Team
@@ -126,33 +124,14 @@ HR Team
         return jsonify({"status": "error", "details": resp}), 500
 
 # ---------------------------------------
-# HOME PAGE
+# STEP C SUPPORT: UPDATED AVAILABILITY
 # ---------------------------------------
 
-@app.route("/", methods=["GET"])
-def home():
-    return "Backend is running", 200
-
-# ---------------------------------------
-# STEP C SUPPORT: Updated Availability Store
-# ---------------------------------------
-
-# Temporary storage for updated availability
 updated_availability = {}
-# Format:
-# { "candidate_email": "2025-12-01T09:00Z/2025-12-01T10:00Z", ... }
-
+# { "candidate_email": "2025-12-01T09:00Z/2025-12-01T10:00Z" }
 
 @app.route("/api/save_updated_availability", methods=["POST"])
 def save_updated_availability():
-    """
-    Save the candidate's newly submitted slots (from WatsonX or frontend form)
-    Body expects:
-    {
-        "candidate_email": "user@example.com",
-        "new_slots": "2025-12-01T09:00Z/2025-12-01T10:00Z"
-    }
-    """
     data = request.json
     candidate_email = data.get("candidate_email")
     new_slots = data.get("new_slots")
@@ -168,18 +147,11 @@ def save_updated_availability():
 
 @app.route("/api/get_updated_availability", methods=["GET"])
 def get_updated_availability():
-    """
-    Called by WatsonX Step C (Scheduled Workflow)
-    Returns the entire dict of updated availability
-    """
     return jsonify(updated_availability), 200
 
 
 @app.route("/api/clear_availability/<email>", methods=["POST"])
 def clear_availability(email):
-    """
-    Clear once a successful match is found
-    """
     if email in updated_availability:
         del updated_availability[email]
         return jsonify({"status": "cleared"}), 200
@@ -188,7 +160,16 @@ def clear_availability(email):
 
 
 # ---------------------------------------
-# RUN LOCALLY
+# HOME PAGE
+# ---------------------------------------
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Backend is running", 200
+
+
+# ---------------------------------------
+# RUN LOCALLY ONLY
 # ---------------------------------------
 
 if __name__ == "__main__":
