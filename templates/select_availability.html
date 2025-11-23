@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Reschedule — Submit Availability</title>
 
-  <!-- FullCalendar v6 CSS & JS (CDN) -->
   <link href="https://unpkg.com/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
   <script src="https://unpkg.com/fullcalendar@6.1.8/main.min.js"></script>
   <script src="https://unpkg.com/fullcalendar@6.1.8/index.global.min.js"></script>
 
 
-  <!-- Optional: moment for formatting (not required, but handy) -->
   <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
 
   <style>
@@ -68,8 +66,7 @@
   </div>
 
   <script>
-    // Config
-    const baseApi = window.location.origin; // uses same origin (Render) like https://backend-email-7jn1.onrender.com
+    const baseApi = window.location.origin; 
     const calendarEl = document.getElementById('calendar');
     const candidateEmailInput = document.getElementById('candidateEmail');
     const confirmBtn = document.getElementById('confirmBtn');
@@ -77,10 +74,8 @@
     const errorEl = document.getElementById('error');
     const viewSelect = document.getElementById('viewSelect');
 
-    // Keep the selected range
     let selectedRange = null;
 
-    // Initialize FullCalendar
     const calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: 'timeGridWeek',
       allDaySlot: false,
@@ -98,7 +93,7 @@
         right: ''
       },
       select: function(info) {
-        // info.start / info.end are Date objects
+        
         selectedRange = { start: info.start, end: info.end };
         confirmBtn.disabled = false;
         successEl.style.display = 'none';
@@ -108,21 +103,18 @@
         selectedRange = null;
         confirmBtn.disabled = true;
       },
-      // optional: double-click to clear
+
       eventClick: function(){},
       now: (new Date()).toISOString()
     });
 
     calendar.render();
 
-    // change view
     viewSelect.addEventListener('change', () => {
       calendar.changeView(viewSelect.value);
     });
 
-    // Helper: format Date to ISO with Z (UTC) and no milliseconds
     function toIsoUtcNoMs(dateObj){
-      // convert to UTC components
       const yyyy = dateObj.getUTCFullYear();
       const mm = String(dateObj.getUTCMonth()+1).padStart(2,'0');
       const dd = String(dateObj.getUTCDate()).padStart(2,'0');
@@ -132,14 +124,12 @@
       return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}Z`;
     }
 
-    // Convert selectedRange to the slot format required by backend
     function makeSlotString(range){
       const startIso = toIsoUtcNoMs(range.start);
       const endIso = toIsoUtcNoMs(range.end);
       return `${startIso}/${endIso}`;
     }
 
-    // Submit action
     confirmBtn.addEventListener('click', async () => {
       successEl.style.display = 'none';
       errorEl.style.display = 'none';
@@ -174,10 +164,9 @@
         const data = await res.json();
         if (res.ok && data.status === 'saved') {
           successEl.style.display = 'block';
-          // clear selection
           calendar.unselect();
           selectedRange = null;
-          candidateEmailInput.value = email; // keep email
+          candidateEmailInput.value = email; 
           confirmBtn.textContent = 'Submitted';
           setTimeout(() => {
             confirmBtn.textContent = 'Submit Availability';
@@ -197,7 +186,6 @@
       }
     });
 
-    // UX: enable button only when email provided
     candidateEmailInput.addEventListener('input', () => {
       confirmBtn.disabled = !candidateEmailInput.value || !selectedRange;
     });
