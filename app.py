@@ -4,12 +4,9 @@ import requests
 
 app = Flask(__name__)
 
-# ---------------------------------------
-# SendGrid Email Helper
-# ---------------------------------------
 
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
-FROM_EMAIL = os.getenv("FROM_EMAIL")  # example: "hr@yourdomain.com"
+FROM_EMAIL = os.getenv("FROM_EMAIL")  
 
 def send_sendgrid_email(to_email, subject, body):
     """
@@ -40,17 +37,12 @@ def send_sendgrid_email(to_email, subject, body):
     return response.status_code, response.text
 
 
-# ---------------------------------------
-# RESCHEDULE PAGE
-# ---------------------------------------
 
 @app.route("/reschedule", methods=["GET"])
 def show_reschedule_page():
     return render_template("reschedule.html")
 
-# ---------------------------------------
-# SELECT AVAILABILITY PAGE (new UI)
-# ---------------------------------------
+
 
 @app.route("/select_availability", methods=["GET"])
 def show_select_availability():
@@ -64,9 +56,6 @@ def save_reschedule():
     return "Thanks! Your new availability has been submitted."
 
 
-# ---------------------------------------
-# SEND BOOKING EMAIL
-# ---------------------------------------
 
 @app.route("/sendEmail", methods=["POST"])
 def send_email():
@@ -102,9 +91,6 @@ HR Team
         return jsonify({"status": "error", "details": resp}), 500
 
 
-# ---------------------------------------
-# SEND “NO SLOT FOUND” EMAIL
-# ---------------------------------------
 
 @app.route("/sendNoSlotEmail", methods=["POST"])
 def send_no_slot_email():
@@ -135,9 +121,6 @@ HR Team
         return jsonify({"status": "error", "details": resp}), 500
 
 
-# ---------------------------------------
-# HR ESCALATION EMAIL (Step D)
-# ---------------------------------------
 
 @app.route("/sendHREscalation", methods=["POST"])
 def send_hr_escalation():
@@ -165,7 +148,7 @@ Regards,
 Auto Scheduler System
 """
 
-    # HR mailbox here
+
     HR_EMAIL = "aseriousglass@gmail.com"
 
     code, resp = send_sendgrid_email(HR_EMAIL, subject, body)
@@ -176,13 +159,9 @@ Auto Scheduler System
         return jsonify({"status": "error", "details": resp}), 500
 
 
-# ---------------------------------------
-# UPDATED AVAILABILITY (Step C)
-# ---------------------------------------
 
 updated_availability = {}
-# Example:
-# { "candidate@example.com": "2025-12-01T09:00Z/2025-12-01T10:00Z" }
+
 
 
 @app.route("/api/save_updated_availability", methods=["POST"])
@@ -214,18 +193,12 @@ def clear_availability(email):
     return jsonify({"status": "not_found"}), 404
 
 
-# ---------------------------------------
-# HOME PAGE
-# ---------------------------------------
 
 @app.route("/", methods=["GET"])
 def home():
     return "Backend is running", 200
 
 
-# ---------------------------------------
-# RUN LOCALLY ONLY
-# ---------------------------------------
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
