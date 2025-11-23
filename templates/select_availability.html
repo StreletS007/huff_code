@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Select Availability</title>
 
-  <link rel="stylesheet" href="/static/calendar/calendar.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='calendar/calendar.css') }}">
 </head>
 
 <body>
@@ -21,21 +21,24 @@
   </div>
 
   <button id="submitBtn" disabled
-          style="margin-top:20px;padding:10px 20px;font-size:16px;"
-          onclick="submitAvailability()">
+          style="margin-top:20px;padding:10px 20px;font-size:16px;">
     Submit
   </button>
 
-  <script src="/static/calendar/calendar.js"></script>
+  <script src="{{ url_for('static', filename='calendar/calendar.js') }}"></script>
 
   <script>
     buildCalendar();
 
-    async function submitAvailability() {
+    submitBtn.onclick = async function () {
       const email = document.getElementById("emailInput").value;
 
+      if (!email) {
+        alert("Please enter your email.");
+        return;
+      }
       if (!selectedSlot) {
-        alert("Select a slot first.");
+        alert("Select a time slot.");
         return;
       }
 
@@ -58,7 +61,7 @@
       } else {
         alert("Error: " + JSON.stringify(data));
       }
-    }
+    };
   </script>
 
 </body>
