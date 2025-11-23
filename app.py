@@ -2,7 +2,11 @@ from flask import Flask, request, jsonify, render_template
 import os
 import requests
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(
+    __name__,
+    template_folder="templates",
+    static_folder="static"
+)
 
 
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")

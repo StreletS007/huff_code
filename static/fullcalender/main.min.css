@@ -1,0 +1,100 @@
+.fc, .fc *, .fc ::before, .fc ::after {
+  box-sizing: border-box;
+}
+
+.fc {
+  direction: ltr;
+  text-align: left;
+}
+
+.fc table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  empty-cells: show;
+}
+
+.fc .fc-scroller {
+  -webkit-overflow-scrolling: touch;
+}
+
+.fc .fc-bg-event {
+  opacity: .3;
+}
+
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid #ddd;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border: 1px solid #ddd;
+}
+
+.fc-scrollgrid-liquid {
+  height: 100%;
+}
+
+.fc-daygrid-day-number {
+  padding: 4px;
+}
+
+.fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+  opacity: .3;
+}
+
+.fc .fc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+  padding: .5em;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.fc-timegrid-slot {
+  height: 2.5em;
+  border-bottom: 1px solid #eee;
+}
+
+.fc-timegrid-slot-label {
+  padding-right: 5px;
+  font-size: .9em;
+  color: #555;
+}
+
+.fc-event {
+  background: #3788d8;
+  color: #fff;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: .85em;
+}
+
+.fc .fc-button {
+  background: #2c7be5;
+  color: white;
+  border: none;
+  padding: .4em .6em;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.fc .fc-button:hover {
+  background: #1a68d1;
+}
+
+.fc .fc-button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.fc .fc-now-indicator-line {
+  border-top: 2px solid red;
+}
+
+.fc .fc-now-indicator-arrow {
+  border-color: red transparent transparent;
+}
