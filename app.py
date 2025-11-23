@@ -48,6 +48,14 @@ def send_sendgrid_email(to_email, subject, body):
 def show_reschedule_page():
     return render_template("reschedule.html")
 
+# ---------------------------------------
+# SELECT AVAILABILITY PAGE (new UI)
+# ---------------------------------------
+
+@app.route("/select_availability", methods=["GET"])
+def show_select_availability():
+    return render_template("select_availability.html")
+
 
 @app.route("/reschedule", methods=["POST"])
 def save_reschedule():
