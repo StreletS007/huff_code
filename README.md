@@ -158,28 +158,9 @@ POST /api/retry
 
 Retry matching manually.
 
-🖼️ Frontend Calendar Libraries
-https://unpkg.com/fullcalendar@6.1.8/main.min.css
-https://unpkg.com/fullcalendar@6.1.8/main.min.js
-https://unpkg.com/fullcalendar@6.1.8/index.global.min.js
-https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js
 
 📬 SendGrid Integration
 
-SendGrid API:
-
-https://api.sendgrid.com/v3/mail/send
-
-
-Environment variables:
-
-SENDGRID_API_KEY = hijk
-FROM_EMAIL = lmno
-
-🧠 Watsonx Orchestrate Credentials
-WATSONX_API_KEY = defg
-WATSONX_PROJECT_ID = abcd
-WATSONX_REGION = ca-tor
 
 🧪 How to Test the Entire System (Step-by-Step)
 ✔ 1. Open the Calendar UI
