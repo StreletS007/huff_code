@@ -1,194 +1,65 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reschedule — Submit Availability</title>
+  <meta charset="utf-8">
+  <title>Select Availability</title>
 
-  <link href="{{ url_for('static', filename='fullcalendar/main.min.css') }}" rel="stylesheet">
-  <script src="{{ url_for('static', filename='fullcalendar/main.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='fullcalendar/index.global.min.js') }}"></script>
-
-
-  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-
-  <style>
-    :root{
-      --bg:#f7fafc;
-      --card:#ffffff;
-      --accent:#2563eb;
-      --muted:#6b7280;
-      --success:#16a34a;
-    }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;}
-    body{background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:28px;}
-    .container{width:100%;max-width:980px;background:var(--card);border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.08);padding:20px;}
-    header{display:flex;gap:14px;align-items:center;margin-bottom:12px;}
-    header h1{margin:0;font-size:18px;}
-    .meta {margin-left:auto; color:var(--muted); font-size:13px;}
-    .controls{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
-    input[type="email"]{padding:8px 10px;border:1px solid #e6e9ef;border-radius:8px;min-width:260px;}
-    button{background:var(--accent);color:white;padding:9px 14px;border-radius:10px;border:none;cursor:pointer}
-    button[disabled]{opacity:0.6;cursor:not-allowed}
-    #calendar {max-width:100%; border-radius:8px; overflow:hidden; border:1px solid #eee; background:white;}
-    .note{font-size:13px;color:var(--muted);margin-bottom:6px;}
-    .success {display:none;margin-top:12px;padding:10px;border-radius:8px;background:#ecfdf5;color:var(--success);border:1px solid #bbf7d0;}
-    .error {display:none;margin-top:12px;padding:10px;border-radius:8px;background:#fff1f2;color:#dc2626;border:1px solid #fecaca;}
-    @media (max-width:640px){
-      .controls{flex-direction:column;align-items:stretch;}
-      input[type="email"]{width:100%}
-    }
-  </style>
+  <link rel="stylesheet" href="/static/calendar/calendar.css">
 </head>
+
 <body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>Choose your availability</h1>
-        <div class="note">Drag on the calendar to choose a time range (30 minutes min recommended). Time is in UTC by default.</div>
-      </div>
-      <div class="meta">Powered by AI Scheduler</div>
-    </header>
 
-    <div class="controls">
-      <input id="candidateEmail" type="email" placeholder="Your email (e.g. aditi@example.com)" />
-      <select id="viewSelect" title="Calendar view">
-        <option value="timeGridWeek">Week view</option>
-        <option value="timeGridDay">Day view</option>
-      </select>
-      <button id="confirmBtn" disabled>Submit Availability</button>
-    </div>
+  <h2>Select your availability</h2>
 
-    <div id="calendar"></div>
+  <input id="emailInput" placeholder="Enter your email"
+         style="padding:10px;font-size:16px;width:300px;">
 
-    <div id="success" class="success">Thanks! Your new availability has been submitted.</div>
-    <div id="error" class="error"></div>
+  <div id="calendar"></div>
+
+  <div id="selectedSlot" style="margin-top:20px;font-size:18px;color:#444;">
+    No slot selected
   </div>
 
+  <button id="submitBtn" disabled
+          style="margin-top:20px;padding:10px 20px;font-size:16px;"
+          onclick="submitAvailability()">
+    Submit
+  </button>
+
+  <script src="/static/calendar/calendar.js"></script>
+
   <script>
-    const baseApi = window.location.origin; 
-    const calendarEl = document.getElementById('calendar');
-    const candidateEmailInput = document.getElementById('candidateEmail');
-    const confirmBtn = document.getElementById('confirmBtn');
-    const successEl = document.getElementById('success');
-    const errorEl = document.getElementById('error');
-    const viewSelect = document.getElementById('viewSelect');
+    buildCalendar();
 
-    let selectedRange = null;
+    async function submitAvailability() {
+      const email = document.getElementById("emailInput").value;
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'timeGridWeek',
-      allDaySlot: false,
-      selectable: true,
-      selectMirror: true,
-      nowIndicator: true,
-      slotMinTime: "06:00:00",
-      slotMaxTime: "22:00:00",
-      slotDuration: "00:30:00",
-      expandRows: true,
-      height: 650,
-      headerToolbar: {
-        left: 'prev,next today',
-        center: 'title',
-        right: ''
-      },
-      select: function(info) {
-        
-        selectedRange = { start: info.start, end: info.end };
-        confirmBtn.disabled = false;
-        successEl.style.display = 'none';
-        errorEl.style.display = 'none';
-      },
-      unselect: function(info){
-        selectedRange = null;
-        confirmBtn.disabled = true;
-      },
-
-      eventClick: function(){},
-      now: (new Date()).toISOString()
-    });
-
-    calendar.render();
-
-    viewSelect.addEventListener('change', () => {
-      calendar.changeView(viewSelect.value);
-    });
-
-    function toIsoUtcNoMs(dateObj){
-      const yyyy = dateObj.getUTCFullYear();
-      const mm = String(dateObj.getUTCMonth()+1).padStart(2,'0');
-      const dd = String(dateObj.getUTCDate()).padStart(2,'0');
-      const hh = String(dateObj.getUTCHours()).padStart(2,'0');
-      const min = String(dateObj.getUTCMinutes()).padStart(2,'0');
-      const ss = String(dateObj.getUTCSeconds()).padStart(2,'0');
-      return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}Z`;
-    }
-
-    function makeSlotString(range){
-      const startIso = toIsoUtcNoMs(range.start);
-      const endIso = toIsoUtcNoMs(range.end);
-      return `${startIso}/${endIso}`;
-    }
-
-    confirmBtn.addEventListener('click', async () => {
-      successEl.style.display = 'none';
-      errorEl.style.display = 'none';
-
-      const email = candidateEmailInput.value && candidateEmailInput.value.trim();
-      if (!email) {
-        errorEl.textContent = 'Please enter your email before submitting.';
-        errorEl.style.display = 'block';
-        return;
-      }
-      if (!selectedRange) {
-        errorEl.textContent = 'Please select a time range on the calendar.';
-        errorEl.style.display = 'block';
+      if (!selectedSlot) {
+        alert("Select a slot first.");
         return;
       }
 
-      const slot = makeSlotString(selectedRange);
+      const payload = {
+        candidate_email: email,
+        new_slots: selectedSlot.dataset.start + "/" + selectedSlot.dataset.end
+      };
 
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Submitting...';
+      const res = await fetch("/api/save_updated_availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-      try {
-        const res = await fetch(`${baseApi}/api/save_updated_availability`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            candidate_email: email,
-            new_slots: slot
-          })
-        });
+      const data = await res.json();
 
-        const data = await res.json();
-        if (res.ok && data.status === 'saved') {
-          successEl.style.display = 'block';
-          calendar.unselect();
-          selectedRange = null;
-          candidateEmailInput.value = email; 
-          confirmBtn.textContent = 'Submitted';
-          setTimeout(() => {
-            confirmBtn.textContent = 'Submit Availability';
-            confirmBtn.disabled = true;
-          }, 2500);
-        } else {
-          errorEl.textContent = data.error || JSON.stringify(data);
-          errorEl.style.display = 'block';
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Submit Availability';
-        }
-      } catch (err) {
-        errorEl.textContent = 'Network error: ' + err.message;
-        errorEl.style.display = 'block';
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Submit Availability';
+      if (data.status === "saved") {
+        alert("Availability saved!");
+        window.location.reload();
+      } else {
+        alert("Error: " + JSON.stringify(data));
       }
-    });
-
-    candidateEmailInput.addEventListener('input', () => {
-      confirmBtn.disabled = !candidateEmailInput.value || !selectedRange;
-    });
+    }
   </script>
+
 </body>
 </html>
